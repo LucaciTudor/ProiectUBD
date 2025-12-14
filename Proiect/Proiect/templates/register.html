@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Înregistrare{% endblock %}
+
+{% block content %}
+<style>
+    .input-group { position: relative; width: 100%; }
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 35px;
+        cursor: pointer;
+        font-size: 1.2em;
+        user-select: none;
+    }
+</style>
+
+<div style="max-width: 500px; margin: 50px auto;">
+    <h1>📝 Înregistrare (IETI Oradea)</h1>
+    
+    <form method="POST" onsubmit="return validateForm()">
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 10px;">
+            <h3>1. Date Personale</h3>
+            
+            <label>Nume:</label>
+            <input type="text" name="nume" required class="form-control" placeholder="Popescu"><br>
+            
+            <label>Prenume:</label>
+            <input type="text" name="prenume" required class="form-control" placeholder="Andrei"><br>
+
+            <label>Email:</label>
+            <input type="email" name="email" required class="form-control" placeholder="email@student.uoradea.ro"><br>
+            
+            <div class="input-group">
+                <label>Parolă:</label>
+                <input type="password" name="password" id="pass1" required class="form-control">
+                <span class="toggle-password" onclick="togglePass('pass1', this)">👁️</span>
+            </div>
+            <br>
+
+            <div class="input-group">
+                <label>Confirmă Parola:</label>
+                <input type="password" name="confirm_password" id="pass2" required class="form-control">
+                <span class="toggle-password" onclick="togglePass('pass2', this)">👁️</span>
+            </div>
+            <br>
+            
+            <label>Tip Cont:</label>
+            <select name="role" id="roleSelect" onchange="toggleStudentFields()" style="width: 100%; padding: 8px;">
+                <option value="student">Student</option>
+                <option value="profesor">Profesor</option>
+                <option value="admin">Administrator</option>
+            </select>
+        </div>
+
+        <div id="studentFields" style="background: #f8f9fa; padding: 15px; border-radius: 5px;">
+            <h3>2. Detalii Academice</h3>
+            <p style="font-size: 0.9em; color: red;">⚠️ Anul și Specializarea nu se pot schimba ulterior!</p>
+            
+            <label>An Studiu:</label>
+            <select name="an_studiu" style="width: 100%; padding: 8px;">
+                <option value="1">Anul 1</option>
+                <option value="2">Anul 2</option>
+                <option value="3">Anul 3</option>
+                <option value="4">Anul 4</option>
+            </select><br><br>
+            
+            <label>Specializare (Licență IETI):</label>
+            <select name="specializare" style="width: 100%; padding: 8px;">
+                <option value="Calculatoare">Calculatoare (CTI)</option>
+                <option value="Tehnologia Informatiei">Tehnologia Informației (TI)</option>
+                
+                <option value="Electronica Aplicata">Electronică Aplicată</option>
+                <option value="Retele Software Telecom">Rețele și Software de Telecomunicații</option>
+                
+                <option value="Sisteme Electrice">Sisteme Electrice</option>
+                <option value="Electromecanica">Electromecanică</option>
+                
+                <option value="Automatica">Automatică şi Informatică Aplicată</option>
+                
+                <option value="Inginerie Economica">Inginerie Economică (Electric/Energetic)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-success" style="margin-top: 20px; width: 100%;">Creează Cont</button>
+    </form>
+</div>
+
+<script>
+    function togglePass(inputId, icon) {
+        var input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.innerText = "🙈"; 
+        } else {
+            input.type = "password";
+            icon.innerText = "👁️";
+        }
+    }
+
+    function toggleStudentFields() {
+        var role = document.getElementById("roleSelect").value;
+        var fields = document.getElementById("studentFields");
+        fields.style.display = (role === 'student') ? "block" : "none";
+    }
+    toggleStudentFields();
+</script>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Adaugă Notă{% endblock %}
+
+{% block content %}
+    <h1>📝 Adaugă Notă</h1>
+    <form method="POST" style="max-width: 500px;">
+        <div class="form-group">
+            <label>Student:</label>
+            <select name="id_student" required>
+                <option value="">-- Alege Student --</option>
+                {% for s in studenti %}
+                    <option value="{{ s.id_student }}">{{ s.get_full_name() }} ({{ s.grupa }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Disciplină:</label>
+            <select name="id_disciplina" required>
+                <option value="">-- Alege Disciplină --</option>
+                {% for d in discipline %}
+                    <option value="{{ d.id_disciplina }}">{{ d.nume_disciplina }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Nota (1-10):</label>
+            <input type="number" step="0.5" name="nota" min="1" max="10" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Înregistrează Nota</button>
+    </form>
+{% endblock %}

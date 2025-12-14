@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ro">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Platformă Școlară{% endblock %}</title>
+    <style>
+        /* STILURI GENERALE */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f6f9; color: #333; }
+        
+        /* NAVBAR (MENIU) */
+        .navbar { background-color: #343a40; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; color: white; }
+        .navbar a { color: #f8f9fa; text-decoration: none; margin-right: 15px; font-weight: 500; font-size: 0.95em; }
+        .navbar a:hover { color: #ffc107; }
+        .logo { font-weight: bold; font-size: 1.1em; color: white; display: inline-block; }
+
+        /* CONTAINER PRINCIPAL */
+        .container { max-width: 1100px; margin: 40px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+
+        /* TABELE */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #dee2e6; padding: 12px; text-align: left; }
+        th { background-color: #e9ecef; color: #495057; }
+        
+        /* BUTOANE */
+        .btn { display: inline-block; padding: 8px 16px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; border: none; cursor: pointer; transition: background 0.2s; font-size: 0.9em; }
+        .btn:hover { background-color: #0056b3; }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #218838; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-sm { padding: 4px 8px; font-size: 0.8em; }
+
+        /* FORMULARE */
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; margin-bottom: 10px; font-size: 1em; }
+        label { font-weight: 600; margin-bottom: 5px; display: block; color: #495057; }
+
+        /* MESAJE FLASH (Alerte) */
+        .flash { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .flash.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .flash.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .flash.info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('index') }}" class="logo">🏠 Dashboard</a>
+                <a href="{{ url_for('chat') }}">💬 Chat</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('gestiune_utilizatori') }}" style="color: #ffc107;">⚙️ Admin</a>
+                {% endif %}
+            {% else %}
+                <span class="logo">🏫 Platformă IETI</span>
+            {% endif %}
+        </div>
+        <div>
+            {% if current_user.is_authenticated %}
+                <span style="color: #ccc; font-size: 0.9em; margin-right: 15px;">{{ current_user.username }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger" style="padding: 5px 12px;">Ieșire</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Autentificare</a>
+                <a href="{{ url_for('register') }}" class="btn btn-success" style="margin-left: 10px;">Creare Cont</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
