@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Curiculă Facultate{% endblock %}
+
+{% block content %}
+    <h1>📚 Curiculă IETI Oradea</h1>
+    <p>Lista completă a disciplinelor disponibile în sistem.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Specializare</th>
+                <th>An Studiu</th>
+                <th>Denumire Disciplină</th>
+                <th>Credite</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in discipline %}
+            <tr>
+                <td><strong>{{ d.specializare }}</strong></td>
+                <td style="text-align: center;">{{ d.an_studiu }}</td>
+                <td>{{ d.nume_disciplina }}</td>
+                <td style="text-align: center;">{{ d.credite }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4">Nu există discipline în baza de date.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
