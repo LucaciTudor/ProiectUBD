@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📚 Gestionare Discipline</h1>
+<p>Asignează profesori la componente specifice (Curs/Lab/etc).</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Specializare</th>
+            <th>An</th>
+            <th>Sem</th>
+            <th>Disciplina</th>
+            <th>Profesor Titular</th>
+            <th>Acțiune</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in discipline %}
+        <tr>
+            <td>{{ d.specializare }}</td>
+            <td>{{ d.an_studiu }}</td>
+            <td>{{ d.semestru }}</td>
+            <td><strong>{{ d.nume_disciplina }}</strong> ({{ d.tip_activitate }})</td>
+            <td>
+                <form action="{{ url_for('asigneaza_profesor_materie', id_disciplina=d.id_disciplina) }}" method="POST" style="display: flex; gap: 5px;">
+                    <select name="id_profesor" style="padding: 5px;">
+                        <option value="">-- Fără Profesor --</option>
+                        {% for p in profesori %}
+                            <option value="{{ p.id_profesor }}" {% if d.id_profesor_titular == p.id_profesor %}selected{% endif %}>
+                                {{ p.get_full_name() }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-success btn-sm">Salvează</button>
+                </form>
+            </td>
+            <td>{{ d.credite }} credite</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

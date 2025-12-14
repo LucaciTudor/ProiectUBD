@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>👨‍🏫 Panou Profesor: {{ profesor.get_full_name() }}</h1>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px;">
+    {% for d in discipline %}
+    <div style="background: white; padding: 20px; border-radius: 8px; border-left: 5px solid #007bff; width: 300px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h3>{{ d.nume_disciplina }}</h3>
+        <span style="background: #e9ecef; padding: 3px 8px; border-radius: 4px; font-size: 0.9em;">{{ d.tip_activitate }}</span>
+        <p><strong>Spec:</strong> {{ d.specializare }} (An {{ d.an_studiu }})</p>
+        <a href="{{ url_for('vizualizare_materie', id_disciplina=d.id_disciplina) }}" class="btn btn-primary" style="width: 100%; text-align: center;">Gestionează Note/Prezențe</a>
+    </div>
+    {% else %}
+    <p>Nu ești asignat la nicio disciplină. Contactează administratorul.</p>
+    {% endfor %}
+</div>
+{% endblock %}

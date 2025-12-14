@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Editare Student{% endblock %}
+
+{% block content %}
+<div style="display: flex; gap: 30px; flex-wrap: wrap;">
+    
+    <div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+        <h2 style="border-bottom: 2px solid #007bff; padding-bottom: 10px;">✏️ Editare Profil</h2>
+        <form method="POST">
+            <input type="hidden" name="update_info" value="1">
+            <p><strong>Student:</strong> {{ student.get_full_name() }}</p>
+            <p><strong>Matricol:</strong> {{ student.nr_matricol }}</p>
+            
+            <label>Grupa:</label>
+            <input type="text" name="grupa" value="{{ student.grupa }}" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+            
+            <label>An Studiu:</label>
+            <select name="an_studiu" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <option value="1" {% if student.an_studiu == 1 %}selected{% endif %}>Anul 1</option>
+                <option value="2" {% if student.an_studiu == 2 %}selected{% endif %}>Anul 2</option>
+                <option value="3" {% if student.an_studiu == 3 %}selected{% endif %}>Anul 3</option>
+                <option value="4" {% if student.an_studiu == 4 %}selected{% endif %}>Anul 4</option>
+            </select>
+            
+            <label>Specializare (IETI):</label>
+            <select name="specializare" style="width: 100%; padding: 8px; margin-bottom: 20px;">
+                <option value="Calculatoare" {% if student.specializare == 'Calculatoare' %}selected{% endif %}>Calculatoare (CTI)</option>
+                <option value="Tehnologia Informatiei" {% if student.specializare == 'Tehnologia Informatiei' %}selected{% endif %}>Tehnologia Informației (TI)</option>
+                <option value="Electronica Aplicata" {% if student.specializare == 'Electronica Aplicata' %}selected{% endif %}>Electronică Aplicată</option>
+                <option value="Retele Software Telecom" {% if student.specializare == 'Retele Software Telecom' %}selected{% endif %}>Rețele și Software Telecom</option>
+                <option value="Sisteme Electrice" {% if student.specializare == 'Sisteme Electrice' %}selected{% endif %}>Sisteme Electrice</option>
+                <option value="Electromecanica" {% if student.specializare == 'Electromecanica' %}selected{% endif %}>Electromecanică</option>
+                <option value="Automatica" {% if student.specializare == 'Automatica' %}selected{% endif %}>Automatică şi Informatică Aplicată</option>
+                <option value="Inginerie Economica" {% if student.specializare == 'Inginerie Economica' %}selected{% endif %}>Inginerie Economică</option>
+            </select>
+            
+            <button type="submit" class="btn btn-primary">💾 Salvează Modificări</button>
+        </form>
+    </div>
+
+    <div style="flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 8px; border: 1px solid #ddd;">
+        <h2 style="border-bottom: 2px solid #28a745; padding-bottom: 10px;">📚 Asignare Materii</h2>
+        
+        <form method="POST" style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <input type="hidden" name="asigneaza_materie" value="1">
+            <label>Înscrie la materie:</label>
+            <div style="display: flex; gap: 10px;">
+                <select name="id_disciplina" required style="flex: 1; padding: 8px;">
+                    {% for d in discipline %}
+                        <option value="{{ d.id_disciplina }}">{{ d.nume_disciplina }} ({{ d.credite }} credite)</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-success">Înscrie</button>
+            </div>
+        </form>
+
+        <h4>Materii curente:</h4>
+        <ul style="list-style: none; padding: 0;">
+            {% for inc in student.inscrieri %}
+            <li style="background: #fff; border-bottom: 1px solid #eee; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <span>📘 {{ inc.disciplina.nume_disciplina }}</span>
+                <form method="POST" style="margin: 0;">
+                    <input type="hidden" name="sterge_asignare" value="1">
+                    <input type="hidden" name="id_inscriere" value="{{ inc.id }}">
+                    <button type="submit" class="btn btn-danger" style="padding: 2px 8px; font-size: 0.8em;">❌</button>
+                </form>
+            </li>
+            {% else %}
+                <li style="color: gray;">Studentul nu este înscris la nicio materie.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+<div style="margin-top: 20px;">
+    <a href="{{ url_for('index') }}" class="btn">⬅️ Înapoi la Dashboard</a>
+</div>
+{% endblock %}

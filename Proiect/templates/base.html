@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ro">
+<head>
+    <meta charset="utf-8">
+    <title>Platformă IETI</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f6f9; margin: 0; }
+        .navbar { background: #343a40; padding: 15px 20px; color: white; display: flex; justify-content: space-between; }
+        .navbar a { color: white; text-decoration: none; margin-right: 15px; font-weight: bold; }
+        .container { max-width: 1200px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .btn { padding: 8px 16px; border-radius: 4px; text-decoration: none; border: none; cursor: pointer; display: inline-block; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .flash { padding: 15px; margin-bottom: 20px; border-radius: 4px; background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('index') }}">🏠 Acasă</a>
+                <a href="{{ url_for('chat_home') }}">💬 Chat</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('gestiune_utilizatori') }}" style="color: #ffc107;">⚙️ Admin</a>
+                    
+                    <a href="{{ url_for('admin_discipline') }}" style="color: #17a2b8;">📚 Discipline</a>
+                    
+                {% endif %}
+            {% else %}
+                <span>🏫 Platformă IETI</span>
+            {% endif %}
+        </div>
+        <div>
+            {% if current_user.is_authenticated %}
+                <span style="margin-right: 10px;">{{ current_user.username }}</span>
+                <a href="{{ url_for('logout') }}" class="btn btn-danger">Ieșire</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}" class="btn btn-success" style="margin-left: 10px;">Cont Nou</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
