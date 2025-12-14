@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Autentificare{% endblock %}
+
+{% block content %}
+<div style="max-width: 400px; margin: 50px auto; text-align: center;">
+    <h1>🔐 Autentificare</h1>
+    <p>Te rugăm să te loghezi pentru a accesa catalogul.</p>
+    
+    <form method="POST" style="background: #f8f9fa; padding: 30px; border-radius: 8px; border: 1px solid #ddd;">
+        <div class="form-group">
+            <label style="text-align: left;">Username:</label>
+            <input type="text" name="username" required placeholder="Utilizator">
+        </div>
+        <div class="form-group">
+            <label style="text-align: left;">Parolă:</label>
+            <input type="password" name="password" required placeholder="Parolă">
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Intră în cont</button>
+    </form>
+    
+    <p style="margin-top: 20px;">
+        Nu ai cont? <a href="{{ url_for('register') }}">Creează un cont nou</a>
+    </p>
+</div>
+{% endblock %}

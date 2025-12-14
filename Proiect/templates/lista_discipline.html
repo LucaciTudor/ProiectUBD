@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Discipline{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>📚 Discipline</h1>
+        <a href="{{ url_for('adauga_disciplina') }}" class="btn btn-success">➕ Adaugă Disciplină</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr><th>Nume Disciplină</th><th>Credite</th><th>Profesor Titular</th></tr>
+        </thead>
+        <tbody>
+            {% for d in discipline %}
+            <tr>
+                <td>{{ d.nume_disciplina }}</td>
+                <td>{{ d.credite }}</td>
+                <td>
+                    {% if d.profesor %}
+                        {{ d.profesor.get_full_name() }}
+                    {% else %}
+                        <span style="color: red;">Fără Profesor</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="3" style="text-align: center;">Nu există discipline.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
