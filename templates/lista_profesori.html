@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block page_title %}Cadre Didactice{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Nume Complet</th>
+                        {% if current_user.role == 'admin' %}
+                            <th class="text-end pe-4">Acțiuni</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prof in profesori %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                    <i class="fas fa-user-tie text-secondary"></i>
+                                </div>
+                                <span class="fw-bold">{{ prof.get_full_name() }}</span>
+                            </div>
+                        </td>
+                        {% if current_user.role == 'admin' %}
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('sterge_profesor', id_profesor=prof.id_profesor) }}" class="btn btn-light btn-sm text-danger" onclick="return confirm('Ștergi?')">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center p-4">Nu există date.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

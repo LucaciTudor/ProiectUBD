@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block page_title %}Panou de Control{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-start border-4 border-primary">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-uppercase text-muted small fw-bold mb-1">Studenți</div>
+                    <div class="h3 fw-bold mb-0 text-dark">{{ studenti|length }}</div>
+                </div>
+                <div class="fs-1 text-primary opacity-25">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-start border-4 border-success">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-uppercase text-muted small fw-bold mb-1">Profesori</div>
+                    <div class="h3 fw-bold mb-0 text-dark">{{ profesori|length }}</div>
+                </div>
+                <div class="fs-1 text-success opacity-25">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card h-100 border-start border-4 border-info">
+            <div class="card-body d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="text-uppercase text-muted small fw-bold mb-1">Status Sistem</div>
+                    <div class="h5 fw-bold mb-0 text-dark">Activ</div>
+                </div>
+                <div class="fs-1 text-info opacity-25">
+                    <i class="fas fa-server"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header bg-white">
+                <i class="fas fa-chart-pie me-2 text-primary"></i> Distribuție Utilizatori
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="userChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white">
+                <i class="fas fa-clock me-2 text-primary"></i> Studenți Recenți
+            </div>
+            <div class="list-group list-group-flush">
+                {% for student in studenti[:5] %}
+                <div class="list-group-item d-flex align-items-center justify-content-between border-0 px-4 py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; color: var(--primary);">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ student.get_full_name() }}</h6>
+                            <small class="text-muted">{{ student.specializare }}</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-1">
+                        <a href="{{ url_for('raport_student_general', student_id=student.id_student) }}" class="btn btn-sm btn-light text-primary" title="Vezi Note">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if current_user.role == 'admin' %}
+                            <a href="{{ url_for('editeaza_student', id_student=student.id_student) }}" class="btn btn-sm btn-light text-warning" title="Editează">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted">Nu există date.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var ctx = document.getElementById('userChart').getContext('2d');
+    // Folosim ghilimele pentru a evita erorile de afisare in editoarele de cod
+    var sCount = "{{ studenti|length }}";
+    var pCount = "{{ profesori|length }}";
+
+    var chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Studenți', 'Profesori'],
+            datasets: [{
+                data: [sCount, pCount],
+                backgroundColor: ['#4361ee', '#4cc9f0'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            cutout: '75%'
+        }
+    });
+</script>
+{% endblock %}

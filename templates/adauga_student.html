@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Adaugă Student{% endblock %}
+
+{% block content %}
+    <h1>➕ Adaugă Student Nou</h1>
+    <form method="POST" style="max-width: 500px;">
+        <div class="form-group"><label>Nume:</label><input type="text" name="nume" placeholder="Ex: Popescu" required></div>
+        <div class="form-group"><label>Prenume:</label><input type="text" name="prenume" placeholder="Ex: Andrei" required></div>
+        <div class="form-group"><label>Nr. Matricol:</label><input type="text" name="nr_matricol" placeholder="Ex: 12345" required></div>
+        <div class="form-group"><label>Grupa:</label><input type="text" name="grupa" placeholder="Ex: A1" required></div>
+        <button type="submit" class="btn btn-success">💾 Salvează Student</button>
+        <a href="{{ url_for('index') }}" class="btn" style="background-color: gray;">Anulează</a>
+    </form>
+{% endblock %}
