@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block page_title %}Editare Student{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h5 class="fw-bold mb-0">Modifică Datele Studentului</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Nume</label>
+                            <input type="text" name="nume" value="{{ student.nume }}" class="form-control" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Prenume</label>
+                            <input type="text" name="prenume" value="{{ student.prenume }}" class="form-control" required>
+                        </div>
+                        
+                        <div class="col-md-12">
+                            <label class="form-label text-muted small fw-bold">Nr. Matricol</label>
+                            <input type="text" name="nr_matricol" value="{{ student.nr_matricol }}" class="form-control" required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">An Studiu</label>
+                            <select name="an_studiu" class="form-select">
+                                <option value="1" {% if student.an_studiu == 1 %}selected{% endif %}>Anul 1</option>
+                                <option value="2" {% if student.an_studiu == 2 %}selected{% endif %}>Anul 2</option>
+                                <option value="3" {% if student.an_studiu == 3 %}selected{% endif %}>Anul 3</option>
+                                <option value="4" {% if student.an_studiu == 4 %}selected{% endif %}>Anul 4</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Specializare</label>
+                            <select name="specializare" class="form-select">
+                                <option value="Calculatoare" {% if student.specializare == 'Calculatoare' %}selected{% endif %}>Calculatoare</option>
+                                <option value="Automatica" {% if student.specializare == 'Automatica' %}selected{% endif %}>Automatica</option>
+                                <option value="Tehnologia Informatiei" {% if student.specializare == 'Tehnologia Informatiei' %}selected{% endif %}>Tehnologia Informatiei</option>
+                                <option value="Electronica Aplicata" {% if student.specializare == 'Electronica Aplicata' %}selected{% endif %}>Electronica Aplicata</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex justify-content-end gap-2">
+                        <a href="{{ url_for('index') }}" class="btn btn-light">Anulează</a>
+                        <button type="submit" class="btn btn-primary">Salvează Modificările</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

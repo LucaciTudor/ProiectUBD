@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block page_title %}Gestiune Discipline{% endblock %}
+
+{% block content %}
+<style>
+    .spec-header { background-color: #2b2d42; color: #fff; padding: 12px 20px; border-radius: 8px; margin-top: 1.5rem; display: flex; align-items: center; gap: 10px; }
+    .an-header { background-color: #f3f4f6; color: #374151; font-weight: 700; padding: 10px 20px; border-left: 4px solid var(--primary); }
+</style>
+
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-body">
+        <div class="input-group input-group-lg">
+            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+            <input type="text" id="searchDiscipline" class="form-control border-start-0 ps-0" placeholder="Caută disciplină..." onkeyup="filterSmart()">
+            <button class="btn btn-light" onclick="clearSearch()">Resetează</button>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0" id="disciplineTable">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Disciplina</th>
+                        <th>Curs</th>
+                        <th>Seminar</th>
+                        <th>Laborator</th>
+                        <th>Proiect</th>
+                        <th class="text-center pe-4">Salvează</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set current_spec = '' %}
+                    {% set current_an = 0 %}
+
+                    {% for d in discipline %}
+                        {% if current_spec != d.specializare %}
+                            <tr class="header-row spec-row" data-type="spec">
+                                <td colspan="6" class="p-0 border-0">
+                                    <div class="spec-header mx-3">
+                                        <i class="fas fa-graduation-cap"></i> {{ d.specializare }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% set current_spec = d.specializare %}
+                            {% set current_an = 0 %} 
+                        {% endif %}
+
+                        {% if current_an != d.an_studiu %}
+                            <tr class="header-row an-row" data-type="an">
+                                <td colspan="6" class="p-0 border-0">
+                                    <div class="an-header mx-3 my-2">
+                                        <i class="far fa-calendar-alt me-2"></i> Anul {{ d.an_studiu }}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% set current_an = d.an_studiu %}
+                        {% endif %}
+
+                        <tr class="discipline-row">
+                            <td class="ps-4">
+                                <div class="fw-bold nume-materie text-dark">{{ d.nume_disciplina }}</div>
+                                <div class="small text-muted">Semestrul {{ d.semestru }} • {{ d.credite }} credite</div>
+                            </td>
+                            
+                            <form action="{{ url_for('admin_asignare') }}" method="POST">
+                                <input type="hidden" name="id_disciplina" value="{{ d.id_disciplina }}">
+
+                                <td>
+                                    <select name="titular" class="form-select form-select-sm">
+                                        <option value="">-- Fără --</option>
+                                        {% for p in profesori %}
+                                            <option value="{{ p.id_profesor }}" {% if d.id_titular == p.id_profesor %}selected{% endif %}>{{ p.get_full_name() }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+
+                                <td>
+                                    {% if d.has_seminar %}
+                                        <select name="seminarist" class="form-select form-select-sm">
+                                            <option value="">-- Fără --</option>
+                                            {% for p in profesori %}
+                                                <option value="{{ p.id_profesor }}" {% if d.id_seminarist == p.id_profesor %}selected{% endif %}>{{ p.get_full_name() }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}<span class="text-muted small">-</span>{% endif %}
+                                </td>
+
+                                <td>
+                                    {% if d.has_laborator %}
+                                        <select name="laborant" class="form-select form-select-sm">
+                                            <option value="">-- Fără --</option>
+                                            {% for p in profesori %}
+                                                <option value="{{ p.id_profesor }}" {% if d.id_laborant == p.id_profesor %}selected{% endif %}>{{ p.get_full_name() }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}<span class="text-muted small">-</span>{% endif %}
+                                </td>
+
+                                <td>
+                                    {% if d.has_proiect %}
+                                        <select name="proiectant" class="form-select form-select-sm">
+                                            <option value="">-- Fără --</option>
+                                            {% for p in profesori %}
+                                                <option value="{{ p.id_profesor }}" {% if d.id_proiectant == p.id_profesor %}selected{% endif %}>{{ p.get_full_name() }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}<span class="text-muted small">-</span>{% endif %}
+                                </td>
+
+                                <td class="text-center pe-4">
+                                    <button type="submit" class="btn btn-light btn-sm text-primary hover-shadow" title="Salvează">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                </td>
+                            </form>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="6" class="text-center p-4">Nu există date.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function filterSmart() {
+        var input = document.getElementById("searchDiscipline");
+        var filter = input.value.toLowerCase();
+        var rows = document.getElementById("disciplineTable").getElementsByTagName("tr");
+        
+        for (var i = 1; i < rows.length; i++) {
+            var row = rows[i];
+            if (row.classList.contains('discipline-row')) {
+                var name = row.querySelector('.nume-materie').innerText.toLowerCase();
+                if (name.indexOf(filter) > -1) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            }
+        }
+
+        var visibleInCurrentAn = false;
+        var visibleInCurrentSpec = false;
+
+        for (var i = rows.length - 1; i >= 0; i--) {
+            var row = rows[i];
+            if (row.classList.contains('discipline-row')) {
+                if (row.style.display !== "none") {
+                    visibleInCurrentAn = true; visibleInCurrentSpec = true;
+                }
+            } else if (row.classList.contains('an-row')) {
+                row.style.display = visibleInCurrentAn ? "" : "none";
+                visibleInCurrentAn = false;
+            } else if (row.classList.contains('spec-row')) {
+                row.style.display = visibleInCurrentSpec ? "" : "none";
+                visibleInCurrentAn = false; visibleInCurrentSpec = false;
+            }
+        }
+    }
+    function clearSearch() { document.getElementById("searchDiscipline").value = ""; filterSmart(); }
+</script>
+{% endblock %}

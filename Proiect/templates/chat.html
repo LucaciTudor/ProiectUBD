@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block page_title %}Mesagerie{% endblock %}
+
+{% block content %}
+<style>
+    /* FIX CULORI CHAT */
+    .msg-mine { 
+        background-color: var(--primary) !important; 
+        color: #ffffff !important; 
+        border-bottom-right-radius: 2px; 
+        align-self: flex-end; 
+    }
+    .msg-other { 
+        background-color: #ffffff !important; 
+        border: 1px solid #e3e6f0; 
+        color: #1a1a1a !important; 
+        border-bottom-left-radius: 2px; 
+        align-self: flex-start; 
+    }
+    
+    .chat-card { height: calc(100vh - 130px); min-height: 500px; border-radius: 15px; overflow: hidden; }
+    .chat-sidebar { background: #f8f9fc; border-right: 1px solid #e3e6f0; }
+    .chat-user-item { transition: all 0.2s; border-radius: 10px; margin: 5px 10px; padding: 10px; }
+    .chat-user-item:hover { background: #eef2f8; cursor: pointer; }
+    .chat-user-item.active { background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
+    .chat-messages { background: #fff; background-image: radial-gradient(#eef2f8 1px, transparent 1px); background-size: 20px 20px; }
+    .msg-bubble { padding: 10px 15px; border-radius: 15px; position: relative; max-width: 75%; font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+    .chat-input-area { background: white; padding: 15px; border-top: 1px solid #e3e6f0; }
+    .search-dropdown { position: absolute; width: 90%; z-index: 1000; top: 50px; left: 5%; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 10px; border: none; }
+</style>
+
+<div class="card shadow chat-card d-flex flex-row">
+    <div class="col-md-4 col-lg-3 d-none d-md-flex flex-column chat-sidebar p-0">
+        <div class="p-3 border-bottom bg-white position-relative">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control bg-light border-0" placeholder="Caută...">
+            </div>
+            <div id="searchResults" class="list-group search-dropdown d-none bg-white"></div>
+        </div>
+        
+        <div class="flex-grow-1 overflow-auto py-2">
+            <h6 class="px-3 pt-2 pb-1 text-uppercase text-xs font-weight-bold text-muted">Conversații</h6>
+            {% for c in contacts %}
+                <a href="{{ url_for('chat_with', user_id=c.id) }}" class="d-flex align-items-center chat-user-item text-decoration-none text-dark {{ 'active' if active_chat and active_chat.id == c.id else '' }}">
+                    <div class="position-relative">
+                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                            {{ c.username[0]|upper }}
+                        </div>
+                    </div>
+                    <div class="ms-3 text-truncate">
+                        <div class="fw-bold mb-0">{{ c.username }}</div>
+                        <small class="text-muted">{{ c.role|capitalize }}</small>
+                    </div>
+                </a>
+            {% else %}
+                <div class="text-center p-4 text-muted small">Nu ai conversații recente.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-md-8 col-lg-9 d-flex flex-column p-0">
+        {% if active_chat %}
+            <div class="p-3 border-bottom bg-white d-flex align-items-center shadow-sm" style="z-index: 10;">
+                <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                    {{ active_chat.username[0]|upper }}
+                </div>
+                <div>
+                    <h6 class="m-0 fw-bold">{{ active_chat.username }}</h6>
+                    <small class="text-success"><i class="fas fa-circle fa-xs"></i> Online</small>
+                </div>
+            </div>
+
+            <div class="flex-grow-1 overflow-auto p-4 chat-messages d-flex flex-column gap-3" id="msgBox">
+                {% for m in mesaje %}
+                    <div class="msg-bubble {{ 'msg-mine' if m.sender_id == current_user.id else 'msg-other' }}">
+                        {% if m.fisier %}
+                            <div class="mb-2 p-2 bg-white bg-opacity-25 rounded border border-white border-opacity-50">
+                                <a href="{{ url_for('static', filename='chat_uploads/' + m.fisier) }}" target="_blank" class="text-decoration-none text-reset d-flex align-items-center">
+                                    <i class="fas fa-file-download fa-lg me-2"></i> 
+                                    <span class="text-truncate" style="max-width: 150px;">{{ m.fisier.split('_', 1)[1] }}</span>
+                                </a>
+                            </div>
+                        {% endif %}
+                        {{ m.text if m.text else '' }}
+                        <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.7;">
+                            {{ m.data_trimitere.strftime('%H:%M') }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="chat-input-area d-flex align-items-center gap-2">
+                <label class="btn btn-light text-secondary rounded-circle" title="Atașează fișier">
+                    <i class="fas fa-paperclip"></i> <input type="file" name="fisier" style="display: none;">
+                </label>
+                <input type="text" name="mesaj" class="form-control rounded-pill bg-light border-0 px-3" placeholder="Scrie un mesaj..." autocomplete="off">
+                <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px; padding: 0;"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        {% else %}
+            <div class="d-flex align-items-center justify-content-center h-100 flex-column text-muted bg-light">
+                <div class="bg-white p-4 rounded-circle shadow-sm mb-3">
+                    <i class="fas fa-comments fa-4x text-primary opacity-50"></i>
+                </div>
+                <h4>Începe o conversație</h4>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    var msgBox = document.getElementById('msgBox');
+    if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+
+    const searchInput = document.getElementById('searchInput');
+    const resultsBox = document.getElementById('searchResults');
+    searchInput?.addEventListener('keyup', function() {
+        let query = this.value;
+        if (query.length < 2) { resultsBox.classList.add('d-none'); return; }
+        fetch(`/api/search_users?q=${query}`).then(r => r.json()).then(data => {
+            resultsBox.innerHTML = '';
+            if(data.length > 0) {
+                resultsBox.classList.remove('d-none');
+                data.forEach(u => {
+                    let d = document.createElement('a');
+                    d.className = 'list-group-item list-group-item-action border-0';
+                    d.innerHTML = `<div class='d-flex align-items-center'><div class='avatar bg-secondary text-white rounded-circle me-2 d-flex align-items-center justify-content-center' style='width:30px;height:30px'>${u.username[0]}</div><div><div class='fw-bold'>${u.full_name}</div><small class='text-muted'>${u.role}</small></div></div>`;
+                    d.href = `/chat/${u.id}`;
+                    resultsBox.appendChild(d);
+                });
+            } else resultsBox.classList.add('d-none');
+        });
+    });
+    document.addEventListener('click', e => { if(e.target !== searchInput) resultsBox?.classList.add('d-none'); });
+</script>
+{% endblock %}

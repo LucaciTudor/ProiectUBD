@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block page_title %}Gestiune Utilizatori{% endblock %}
+
+{% block content %}
+{% if pending_users %}
+<div class="card border-warning mb-4">
+    <div class="card-header bg-warning bg-opacity-10 text-warning-emphasis">
+        <i class="fas fa-user-clock me-2"></i> Cereri Înregistrare ({{ pending_users|length }})
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Utilizator</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th class="text-end pe-4">Acțiuni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in pending_users %}
+                    <tr>
+                        <td class="ps-4 fw-bold">{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td><span class="badge bg-warning text-dark">{{ u.role|capitalize }}</span></td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('aproba_user', user_id=u.id) }}" class="btn btn-success btn-sm me-1" title="Aprobă">
+                                <i class="fas fa-check"></i>
+                            </a>
+                            <a href="{{ url_for('sterge_utilizator', user_id=u.id) }}" class="btn btn-danger btn-sm" title="Respinge" onclick="return confirm('Refuzi cererea?')">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <div class="card-header bg-white">
+        <i class="fas fa-users me-2 text-primary"></i> Utilizatori Activi
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>Utilizator</th>
+                        <th>Email</th>
+                        <th>Rol</th>
+                        <th class="text-end pe-4">Acțiuni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in active_users %}
+                    <tr>
+                        <td class="ps-4 text-muted">#{{ u.id }}</td>
+                        <td class="fw-bold">{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            {% if u.role == 'admin' %}
+                                <span class="badge bg-danger">Admin</span>
+                            {% elif u.role == 'profesor' %}
+                                <span class="badge bg-info text-dark">Profesor</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark border">Student</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            {% if u.id != current_user.id %}
+                                <a href="{{ url_for('sterge_utilizator', user_id=u.id) }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('Ștergi acest cont?')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            {% else %}
+                                <span class="text-muted small italic">(Tu)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
