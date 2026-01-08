@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% block page_title %}Discipline{% endblock %}
+{% block page_subtitle %}Gestionează disciplinele și profesorii{% endblock %}
+
+{% block content %}
+<style>
+    /* Fix pentru culori text în form-uri */
+    .form-control, .form-select {
+        color: #1a1a1a !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        color: #1a1a1a !important;
+        background: white !important;
+    }
+    
+    .form-control::placeholder {
+        color: #6c757d !important;
+        opacity: 0.8;
+    }
+    
+    .search-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        margin-bottom: 2rem;
+    }
+
+    .discipline-table {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+    }
+
+    .spec-header { 
+        background: var(--primary);
+        color: white;
+        padding: 1rem 1.5rem;
+        margin: 0;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.1rem;
+    }
+
+    .an-header { 
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-left: 4px solid var(--primary-solid);
+        margin: 0;
+        font-size: 0.95rem;
+    }
+
+    .discipline-row {
+        transition: var(--transition);
+    }
+
+    .discipline-row:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.002);
+    }
+
+    .discipline-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .discipline-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .form-select {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--glass-border);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        transition: var(--transition);
+    }
+
+    .form-select:focus {
+        background: white;
+        border-color: var(--primary-solid);
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+    }
+
+    .save-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        border: none;
+        background: rgba(102, 126, 234, 0.1);
+        color: var(--primary-solid);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+
+    .save-btn:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow);
+    }
+
+    .search-input {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 0.875rem 1rem;
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        background: white;
+        border-color: var(--primary-solid);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .no-data {
+        padding: 3rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .no-data i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+
+<!-- Search Card -->
+<div class="search-card">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="searchDiscipline" class="form-control search-input border-0" 
+                           placeholder="Caută disciplină după nume..." onkeyup="filterDisciplines()">
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button class="btn btn-outline-primary" onclick="clearSearch()">
+                    <i class="fas fa-times me-2"></i>Resetează
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Disciplines Table -->
+<div class="discipline-table">
+    <div class="table-responsive">
+        <table class="table mb-0" id="disciplineTable">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width: 30%;">Disciplina</th>
+                    <th style="width: 15%;">Curs</th>
+                    <th style="width: 15%;">Seminar</th>
+                    <th style="width: 15%;">Laborator</th>
+                    <th style="width: 15%;">Proiect</th>
+                    <th class="text-center pe-4" style="width: 10%;">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set current_spec = '' %}
+                {% set current_an = 0 %}
+
+                {% for d in discipline %}
+                    {% if current_spec != d.specializare %}
+                        <tr class="header-row spec-row" data-type="spec" data-spec="{{ d.specializare }}">
+                            <td colspan="6" class="p-0 border-0">
+                                <div class="spec-header">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    {{ d.specializare }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% set current_spec = d.specializare %}
+                        {% set current_an = 0 %} 
+                    {% endif %}
+
+                    {% if current_an != d.an_studiu %}
+                        <tr class="header-row an-row" data-type="an" data-spec="{{ d.specializare }}" data-an="{{ d.an_studiu }}">
+                            <td colspan="6" class="p-0 border-0">
+                                <div class="an-header">
+                                    <i class="far fa-calendar-alt me-2"></i>
+                                    Anul {{ d.an_studiu }}
+                                </div>
+                            </td>
+                        </tr>
+                        {% set current_an = d.an_studiu %}
+                    {% endif %}
+
+                    <tr class="discipline-row" data-spec="{{ d.specializare }}" data-an="{{ d.an_studiu }}" data-name="{{ d.nume_disciplina|lower }}">
+                        <td class="ps-4">
+                            <div class="discipline-name">{{ d.nume_disciplina }}</div>
+                            <div class="discipline-meta">
+                                <i class="fas fa-calendar me-1"></i>Semestrul {{ d.semestru }} • 
+                                <i class="fas fa-star me-1"></i>{{ d.credite }} credite
+                            </div>
+                        </td>
+                        
+                        <form action="{{ url_for('academic.admin_asignare') }}" method="POST" class="d-contents">
+                            <input type="hidden" name="id_disciplina" value="{{ d.id_disciplina }}">
+
+                            <td>
+                                <select name="titular" class="form-select form-select-sm" {% if current_user.role != 'admin' %}disabled{% endif %}>
+                                    <option value="">-- Selectează --</option>
+                                    {% for p in profesori %}
+                                        <option value="{{ p.id_profesor }}" {% if d.id_titular == p.id_profesor %}selected{% endif %}>
+                                            {{ p.get_full_name() }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
+                            <td>
+                                {% if d.has_seminar %}
+                                    <select name="seminarist" class="form-select form-select-sm" {% if current_user.role != 'admin' %}disabled{% endif %}>
+                                        <option value="">-- Selectează --</option>
+                                        {% for p in profesori %}
+                                            <option value="{{ p.id_profesor }}" {% if d.id_seminarist == p.id_profesor %}selected{% endif %}>
+                                                {{ p.get_full_name() }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <span class="text-muted small">
+                                        <i class="fas fa-minus"></i> Nu are
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if d.has_laborator %}
+                                    <select name="laborant" class="form-select form-select-sm" {% if current_user.role != 'admin' %}disabled{% endif %}>
+                                        <option value="">-- Selectează --</option>
+                                        {% for p in profesori %}
+                                            <option value="{{ p.id_profesor }}" {% if d.id_laborant == p.id_profesor %}selected{% endif %}>
+                                                {{ p.get_full_name() }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <span class="text-muted small">
+                                        <i class="fas fa-minus"></i> Nu are
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if d.has_proiect %}
+                                    <select name="proiectant" class="form-select form-select-sm" {% if current_user.role != 'admin' %}disabled{% endif %}>
+                                        <option value="">-- Selectează --</option>
+                                        {% for p in profesori %}
+                                            <option value="{{ p.id_profesor }}" {% if d.id_proiectant == p.id_profesor %}selected{% endif %}>
+                                                {{ p.get_full_name() }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                {% else %}
+                                    <span class="text-muted small">
+                                        <i class="fas fa-minus"></i> Nu are
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center pe-4">
+                                {% if current_user.role == 'admin' %}
+                                    <button type="submit" class="save-btn" title="Salvează modificările">
+                                        <i class="fas fa-save"></i>
+                                    </button>
+                                {% else %}
+                                    <span class="text-muted small">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </form>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="no-data">
+                            <i class="fas fa-book-open"></i>
+                            <h5>Nu există discipline</h5>
+                            <p class="mb-0">Nu au fost găsite discipline în sistem.</p>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    function filterDisciplines() {
+        const input = document.getElementById("searchDiscipline");
+        const filter = input.value.toLowerCase().trim();
+        const table = document.getElementById("disciplineTable");
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.getElementsByTagName("tr"));
+        
+        // Elimină mesajul "Nu există rezultate" dacă există
+        const existingNoResults = document.getElementById('no-results-row');
+        if (existingNoResults) {
+            existingNoResults.remove();
+        }
+        
+        // Dacă nu există filtru, afișează tot
+        if (filter === '') {
+            rows.forEach(row => {
+                row.style.display = "";
+            });
+            return;
+        }
+        
+        // Ascunde TOATE rândurile mai întâi
+        rows.forEach(row => {
+            row.style.display = "none";
+        });
+        
+        // Găsește disciplinele care se potrivesc
+        const matchingDisciplines = [];
+        const visibleSpecs = new Set();
+        const visibleAns = new Set();
+        
+        rows.forEach(row => {
+            if (row.classList.contains('discipline-row')) {
+                const name = row.getAttribute('data-name');
+                if (name && name.includes(filter)) {
+                    matchingDisciplines.push(row);
+                    const spec = row.getAttribute('data-spec');
+                    const an = row.getAttribute('data-an');
+                    visibleSpecs.add(spec);
+                    visibleAns.add(spec + '-' + an);
+                }
+            }
+        });
+        
+        // Dacă nu există rezultate, afișează mesaj
+        if (matchingDisciplines.length === 0) {
+            const noResultsRow = document.createElement('tr');
+            noResultsRow.innerHTML = `
+                <td colspan="6" class="no-data">
+                    <i class="fas fa-search"></i>
+                    <h5>Nu s-au găsit rezultate</h5>
+                    <p class="mb-0">Nu există discipline care să conțină "${filter}"</p>
+                </td>
+            `;
+            noResultsRow.id = 'no-results-row';
+            tbody.appendChild(noResultsRow);
+            return;
+        }
+        
+        // Afișează doar header-ele necesare și disciplinele care se potrivesc
+        rows.forEach(row => {
+            if (row.classList.contains('spec-row')) {
+                const spec = row.getAttribute('data-spec');
+                if (visibleSpecs.has(spec)) {
+                    row.style.display = "";
+                }
+            } else if (row.classList.contains('an-row')) {
+                const spec = row.getAttribute('data-spec');
+                const an = row.getAttribute('data-an');
+                if (visibleAns.has(spec + '-' + an)) {
+                    row.style.display = "";
+                }
+            } else if (row.classList.contains('discipline-row')) {
+                const name = row.getAttribute('data-name');
+                if (name && name.includes(filter)) {
+                    row.style.display = "";
+                }
+            }
+        });
+    }
+    
+    function clearSearch() { 
+        const input = document.getElementById("searchDiscipline");
+        input.value = ""; 
+        
+        // Elimină mesajul "Nu există rezultate" dacă există
+        const existingNoResults = document.getElementById('no-results-row');
+        if (existingNoResults) {
+            existingNoResults.remove();
+        }
+        
+        // Resetează highlight-ul
+        document.querySelectorAll('.discipline-name').forEach(nameElement => {
+            const text = nameElement.textContent || nameElement.innerText;
+            nameElement.innerHTML = text;
+        });
+        
+        filterDisciplines(); 
+    }
+
+    // Adaugă efecte vizuale pentru salvare
+    document.querySelectorAll('.save-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const form = this.closest('form');
+            if (!form) return;
+            
+            // Verifică dacă cel puțin un profesor este selectat
+            const selects = form.querySelectorAll('select[name]:not([disabled])');
+            let hasSelection = false;
+            selects.forEach(select => {
+                if (select.value && select.value !== '') {
+                    hasSelection = true;
+                }
+            });
+            
+            if (!hasSelection) {
+                e.preventDefault();
+                alert('Te rog să selectezi cel puțin un profesor pentru această disciplină!');
+                return;
+            }
+            
+            // Animație de loading
+            const originalContent = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            this.disabled = true;
+            
+            // Re-activează butonul după 5 secunde în caz că nu se redirecționează
+            setTimeout(() => {
+                this.innerHTML = originalContent;
+                this.disabled = false;
+            }, 5000);
+        });
+    });
+
+    // Adaugă feedback vizual pentru schimbările în select-uri
+    document.querySelectorAll('select[name]').forEach(select => {
+        select.addEventListener('change', function() {
+            const saveBtn = this.closest('form').querySelector('.save-btn');
+            if (saveBtn && !saveBtn.disabled) {
+                saveBtn.style.background = 'rgba(40, 167, 69, 0.2)';
+                saveBtn.style.color = '#28a745';
+                saveBtn.style.transform = 'scale(1.1)';
+                
+                setTimeout(() => {
+                    saveBtn.style.background = '';
+                    saveBtn.style.color = '';
+                    saveBtn.style.transform = '';
+                }, 300);
+            }
+        });
+    });
+
+    // Animații pentru rânduri
+    document.addEventListener('DOMContentLoaded', function() {
+        const rows = document.querySelectorAll('.discipline-row');
+        rows.forEach((row, index) => {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 30);
+        });
+    });
+
+    // Adaugă highlight pentru textul căutat
+    function highlightSearchTerm() {
+        const input = document.getElementById("searchDiscipline");
+        const filter = input.value.toLowerCase().trim();
+        
+        // Resetează toate highlight-urile mai întâi
+        document.querySelectorAll('.discipline-name').forEach(nameElement => {
+            const text = nameElement.textContent || nameElement.innerText;
+            nameElement.innerHTML = text;
+        });
+        
+        if (filter === '') return;
+        
+        const disciplineRows = document.querySelectorAll('.discipline-row');
+        
+        disciplineRows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const nameElement = row.querySelector('.discipline-name');
+                if (nameElement) {
+                    const originalText = nameElement.textContent || nameElement.innerText;
+                    const regex = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    const highlightedText = originalText.replace(regex, '<mark class="bg-warning text-dark">$1</mark>');
+                    nameElement.innerHTML = highlightedText;
+                }
+            }
+        });
+    }
+
+    // Apelează highlight după filtrare
+    const originalFilterDisciplines = filterDisciplines;
+    filterDisciplines = function() {
+        originalFilterDisciplines();
+        setTimeout(highlightSearchTerm, 10);
+    };
+</script>
+
+<style>
+    .d-contents {
+        display: contents;
+    }
+</style>
+{% endblock %}
