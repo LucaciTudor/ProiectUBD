@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+{% block page_title %}Mesagerie{% endblock %}
+
+{% block content %}
+<style>
+    /* FIX CULORI CHAT */
+    .msg-mine { 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: #ffffff !important; 
+        border-bottom-right-radius: 4px !important; 
+        align-self: flex-end; 
+        border: none !important;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    .msg-other { 
+        background: #ffffff !important; 
+        border: 1px solid #e3e6f0 !important; 
+        color: #1a1a1a !important; 
+        border-bottom-left-radius: 4px !important; 
+        align-self: flex-start;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    /* Asigură-te că textul din mesaje este vizibil */
+    .msg-bubble {
+        color: inherit !important;
+        font-weight: 500 !important;
+        line-height: 1.4 !important;
+    }
+    
+    .msg-mine .msg-bubble {
+        color: #ffffff !important;
+    }
+    
+    .msg-other .msg-bubble {
+        color: #1a1a1a !important;
+    }
+    
+    /* Fix pentru timestamp-uri */
+    .msg-mine .d-flex {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    .msg-other .d-flex {
+        color: rgba(26, 26, 26, 0.6) !important;
+    }
+    
+    /* Fix pentru input-uri în chat */
+    .chat-input-area .form-control {
+        color: #1a1a1a !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+        font-weight: 500 !important;
+    }
+    
+    .chat-input-area .form-control::placeholder {
+        color: #6c757d !important;
+        opacity: 0.8;
+        font-weight: 400 !important;
+    }
+    
+    .chat-input-area .form-control:focus {
+        color: #1a1a1a !important;
+        background: white !important;
+        border-color: var(--primary-solid) !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    }
+    
+    /* Fix pentru search input */
+    .search-input {
+        color: #1a1a1a !important;
+        background: rgba(255, 255, 255, 0.95) !important;
+    }
+    
+    .search-input::placeholder {
+        color: #6c757d !important;
+        opacity: 0.8;
+    }
+    
+    .search-input:focus {
+        color: #1a1a1a !important;
+        background: white !important;
+    }
+    
+    /* Asigură-te că toate textele din chat sunt vizibile */
+    .chat-user-item {
+        color: #1a1a1a !important;
+    }
+    
+    .chat-user-item .fw-bold {
+        color: #1a1a1a !important;
+    }
+    
+    .chat-user-item .text-muted {
+        color: #6c757d !important;
+    }
+    
+    .chat-card { height: calc(100vh - 130px); min-height: 500px; border-radius: 15px; overflow: hidden; }
+    .chat-sidebar { background: #f8f9fc; border-right: 1px solid #e3e6f0; }
+    .chat-user-item { transition: all 0.2s; border-radius: 10px; margin: 5px 10px; padding: 10px; }
+    .chat-user-item:hover { background: #eef2f8; cursor: pointer; }
+    .chat-user-item.active { background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 4px solid var(--primary); }
+    .chat-messages { 
+        background: #f8f9fc; 
+        background-image: radial-gradient(#e3e6f0 1px, transparent 1px); 
+        background-size: 20px 20px; 
+    }
+    
+    .msg-bubble { 
+        padding: 12px 16px; 
+        border-radius: 18px; 
+        position: relative; 
+        font-size: 0.95rem; 
+        word-wrap: break-word;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .message-text {
+        margin: 0;
+        line-height: 1.4;
+    }
+    .chat-input-area { background: white; padding: 15px; border-top: 1px solid #e3e6f0; }
+    .search-dropdown { position: absolute; width: 90%; z-index: 1000; top: 50px; left: 5%; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 10px; border: none; }
+</style>
+
+<div class="card shadow chat-card d-flex flex-row">
+    <div class="col-md-4 col-lg-3 d-none d-md-flex flex-column chat-sidebar p-0">
+        <div class="p-3 border-bottom bg-white position-relative">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="fas fa-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control bg-light border-0" placeholder="Caută...">
+            </div>
+            <div id="searchResults" class="list-group search-dropdown d-none bg-white"></div>
+        </div>
+        
+        <div class="flex-grow-1 overflow-auto py-2">
+            <h6 class="px-3 pt-2 pb-1 text-uppercase text-xs font-weight-bold text-muted">Conversații</h6>
+            {% for c in contacts %}
+                {% set unread_count = mesaje_necitite.get(c.id, 0) if mesaje_necitite else 0 %}
+                <a href="{{ url_for('chat.chat_with', user_id=c.id) }}" class="d-flex align-items-center chat-user-item text-decoration-none text-dark {{ 'active' if active_chat and active_chat.id == c.id else '' }} position-relative">
+                    <div class="position-relative">
+                        <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                            {{ c.username[0]|upper }}
+                        </div>
+                    </div>
+                    <div class="ms-3 text-truncate flex-grow-1">
+                        <div class="fw-bold mb-0">{{ c.username }}</div>
+                        <small class="text-muted">{{ c.role|capitalize }}</small>
+                    </div>
+                    {% if unread_count > 0 %}
+                    <span class="badge bg-danger rounded-pill ms-2" style="font-size: 0.7rem;">{{ unread_count }}</span>
+                    {% endif %}
+                </a>
+            {% else %}
+                <div class="text-center p-4 text-muted small">Nu ai conversații recente.</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-md-8 col-lg-9 d-flex flex-column p-0">
+        {% if active_chat %}
+            <div class="p-3 border-bottom bg-white d-flex align-items-center shadow-sm" style="z-index: 10;">
+                <div class="avatar bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+                    {{ active_chat.username[0]|upper }}
+                </div>
+                <div>
+                    <h6 class="m-0 fw-bold">{{ active_chat.username }}</h6>
+                    <small class="text-success"><i class="fas fa-circle fa-xs"></i> Online</small>
+                </div>
+            </div>
+
+            <div class="flex-grow-1 overflow-auto p-4 chat-messages d-flex flex-column gap-3" id="msgBox">
+                {% for m in mesaje %}
+                    <div class="d-flex {{ 'justify-content-end' if m.sender_id == current_user.id else 'justify-content-start' }}">
+                        <div class="msg-bubble {{ 'msg-mine' if m.sender_id == current_user.id else 'msg-other' }}" style="max-width: 75%;">
+                            {% if m.fisier %}
+                                <div class="mb-2 p-2 rounded" style="background: rgba(0,0,0,0.1);">
+                                    {% set file_extension = m.fisier.split('.')[-1].lower() %}
+                                    {% if file_extension in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'] %}
+                                        <div class="mb-2">
+                                            <img src="{{ url_for('static', filename='chat_uploads/' + m.fisier) }}" 
+                                                 alt="Imagine" 
+                                                 class="img-fluid rounded" 
+                                                 style="max-width: 300px; max-height: 200px; object-fit: cover; cursor: pointer;"
+                                                 onclick="window.open(this.src, '_blank')">
+                                        </div>
+                                    {% endif %}
+                                    <a href="{{ url_for('static', filename='chat_uploads/' + m.fisier) }}" target="_blank" class="text-decoration-none d-flex align-items-center" style="color: inherit;">
+                                        {% if file_extension in ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'] %}
+                                            <i class="fas fa-image fa-lg me-2"></i>
+                                        {% elif file_extension in ['pdf'] %}
+                                            <i class="fas fa-file-pdf fa-lg me-2"></i>
+                                        {% elif file_extension in ['doc', 'docx'] %}
+                                            <i class="fas fa-file-word fa-lg me-2"></i>
+                                        {% elif file_extension in ['xls', 'xlsx'] %}
+                                            <i class="fas fa-file-excel fa-lg me-2"></i>
+                                        {% elif file_extension in ['ppt', 'pptx'] %}
+                                            <i class="fas fa-file-powerpoint fa-lg me-2"></i>
+                                        {% elif file_extension in ['zip', 'rar', '7z'] %}
+                                            <i class="fas fa-file-archive fa-lg me-2"></i>
+                                        {% elif file_extension in ['txt'] %}
+                                            <i class="fas fa-file-alt fa-lg me-2"></i>
+                                        {% else %}
+                                            <i class="fas fa-file fa-lg me-2"></i>
+                                        {% endif %}
+                                        <span class="text-truncate" style="max-width: 200px;">{{ m.fisier.split('_', 1)[1] if '_' in m.fisier else m.fisier }}</span>
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
+                            {% if m.text %}
+                                <div class="message-text">{{ m.text }}</div>
+                            {% endif %}
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 0.7rem; opacity: 0.8;">
+                                <span>{{ m.data_trimitere.strftime('%H:%M') }}</span>
+                                {% if m.sender_id == current_user.id %}
+                                    <span class="ms-2">
+                                        {% if m.is_read %}
+                                            <i class="fas fa-check-double" title="Citit {{ m.data_citire.strftime('%d/%m %H:%M') if m.data_citire else '' }}"></i>
+                                        {% else %}
+                                            <i class="fas fa-check" title="Trimis"></i>
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <form method="POST" enctype="multipart/form-data" class="chat-input-area d-flex align-items-center gap-2">
+                <label class="btn btn-light text-secondary rounded-circle position-relative" title="Atașează fișier" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-paperclip"></i> 
+                    <input type="file" name="fisier" style="display: none;" onchange="showFilePreview(this)">
+                </label>
+                <div id="filePreview" class="d-none alert alert-info py-2 px-3 mb-0 rounded-pill">
+                    <i class="fas fa-file me-2"></i>
+                    <span id="fileName"></span>
+                    <button type="button" class="btn-close btn-close-sm ms-2" onclick="clearFilePreview()"></button>
+                </div>
+                <input type="text" name="mesaj" class="form-control rounded-pill border-0 px-3" placeholder="Scrie un mesaj..." autocomplete="off" style="background: rgba(255, 255, 255, 0.95) !important; color: #1a1a1a !important; font-weight: 500;">
+                <button type="submit" class="btn btn-primary rounded-circle" style="width: 40px; height: 40px; padding: 0;"><i class="fas fa-paper-plane"></i></button>
+            </form>
+        {% else %}
+            <div class="d-flex align-items-center justify-content-center h-100 flex-column text-muted bg-light">
+                <div class="bg-white p-4 rounded-circle shadow-sm mb-3">
+                    <i class="fas fa-comments fa-4x text-primary opacity-50"></i>
+                </div>
+                <h4>Începe o conversație</h4>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    var msgBox = document.getElementById('msgBox');
+    if(msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+
+    const searchInput = document.getElementById('searchInput');
+    const resultsBox = document.getElementById('searchResults');
+    searchInput?.addEventListener('keyup', function() {
+        let query = this.value;
+        if (query.length < 2) { resultsBox.classList.add('d-none'); return; }
+        fetch(`/api/search_users?q=${query}`).then(r => r.json()).then(data => {
+            resultsBox.innerHTML = '';
+            if(data.length > 0) {
+                resultsBox.classList.remove('d-none');
+                data.forEach(u => {
+                    let d = document.createElement('a');
+                    d.className = 'list-group-item list-group-item-action border-0';
+                    d.innerHTML = `<div class='d-flex align-items-center'><div class='avatar bg-secondary text-white rounded-circle me-2 d-flex align-items-center justify-content-center' style='width:30px;height:30px'>${u.username[0]}</div><div><div class='fw-bold'>${u.full_name}</div><small class='text-muted'>${u.role}</small></div></div>`;
+                    d.href = `/chat/${u.id}`;
+                    resultsBox.appendChild(d);
+                });
+            } else resultsBox.classList.add('d-none');
+        });
+    });
+    document.addEventListener('click', e => { if(e.target !== searchInput) resultsBox?.classList.add('d-none'); });
+
+    // Actualizează notificările în chat
+    function updateChatNotifications() {
+        fetch('/api/unread_messages_by_user')
+            .then(response => response.json())
+            .then(data => {
+                // Actualizează badge-urile pentru fiecare contact
+                document.querySelectorAll('.chat-user-item').forEach(item => {
+                    const userId = item.href.split('/').pop();
+                    const badge = item.querySelector('.badge');
+                    const count = data[userId] || 0;
+                    
+                    if (count > 0) {
+                        if (badge) {
+                            badge.textContent = count;
+                        } else {
+                            // Creează badge nou dacă nu există
+                            const newBadge = document.createElement('span');
+                            newBadge.className = 'badge bg-danger rounded-pill ms-2';
+                            newBadge.style.fontSize = '0.7rem';
+                            newBadge.textContent = count;
+                            item.appendChild(newBadge);
+                        }
+                    } else if (badge) {
+                        badge.remove();
+                    }
+                });
+            })
+            .catch(error => console.error('Eroare la actualizarea notificărilor chat:', error));
+    }
+
+    // Actualizează notificările la fiecare 15 secunde în chat
+    {% if not active_chat %}
+    setInterval(updateChatNotifications, 15000);
+    {% endif %}
+
+    // Actualizează când utilizatorul revine pe pagină
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            {% if not active_chat %}
+            updateChatNotifications();
+            {% endif %}
+        }
+    });
+
+    // Funcții pentru preview fișiere
+    function showFilePreview(input) {
+        const filePreview = document.getElementById('filePreview');
+        const fileName = document.getElementById('fileName');
+        
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            fileName.textContent = file.name;
+            filePreview.classList.remove('d-none');
+        }
+    }
+
+    function clearFilePreview() {
+        const filePreview = document.getElementById('filePreview');
+        const fileInput = document.querySelector('input[name="fisier"]');
+        
+        filePreview.classList.add('d-none');
+        fileInput.value = '';
+    }
+</script>
+{% endblock %}

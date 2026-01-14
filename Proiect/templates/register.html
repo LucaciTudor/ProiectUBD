@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block page_title %}Înregistrare{% endblock %}
+
+{% block content %}
+<style>
+    /* Stiluri specifice pentru Register Full Page */
+    .sidebar { display: none !important; }
+    
+    body { 
+        background: #f3f4f6; 
+        min-height: 100vh; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+    }
+
+    main {
+        margin: 0 !important;
+        padding: 20px !important;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .reg-container { 
+        width: 100%; 
+        max-width: 500px; 
+        background: white; 
+        padding: 2.5rem; 
+        border-radius: 16px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+    }
+    .form-control, .form-select { 
+        padding: 0.75rem 1rem; 
+        border-radius: 8px; 
+        background: #f9fafb; 
+        border: 1px solid #e5e7eb; 
+    }
+</style>
+
+<div class="reg-container">
+    <div class="text-center mb-4">
+        <h4 class="fw-bold text-dark">Înregistrare Cont</h4>
+        <p class="text-muted small">Completează datele pentru acces</p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} py-2 text-center small mb-3">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="row g-2 mb-3">
+            <div class="col"><input type="text" name="nume" class="form-control" placeholder="Nume" required></div>
+            <div class="col"><input type="text" name="prenume" class="form-control" placeholder="Prenume" required></div>
+        </div>
+        <div class="alert alert-info py-2 small mb-3 border-0 bg-opacity-10">
+            <i class="fas fa-info-circle me-1"></i>
+            <strong>Numele de utilizator</strong> va fi generat automat în formatul: <code>prenume.nume</code>
+            <br>Exemplu: Pentru "Ion Popescu" → <code>ion.popescu</code>
+        </div>
+        <div class="mb-3">
+            <input type="email" name="email" class="form-control" placeholder="Email Instituțional" required>
+        </div>
+        <div class="mb-3">
+            <input type="password" name="password" class="form-control" placeholder="Parolă" required>
+        </div>
+        <div class="mb-3">
+            <input type="password" name="confirm_password" class="form-control" placeholder="Confirmă Parola" required>
+        </div>
+        <div class="mb-3">
+            <select name="role" id="roleSelect" class="form-select" onchange="toggleFields()">
+                <option value="student">Student</option>
+                <option value="profesor">Profesor</option>
+            </select>
+        </div>
+
+        <div id="studentFields" class="bg-light p-3 rounded mb-4 border">
+            <div class="mb-3">
+                <input type="text" name="nr_matricol" id="matricolInput" class="form-control bg-white" placeholder="Nr. Matricol">
+            </div>
+            <div class="row g-2">
+                <div class="col">
+                    <select name="an_studiu" class="form-select bg-white">
+                        <option value="1">An 1</option>
+                        <option value="2">An 2</option>
+                        <option value="3">An 3</option>
+                        <option value="4">An 4</option>
+                    </select>
+                </div>
+                <div class="col">
+                    <select name="specializare" class="form-select bg-white">
+                        <option value="Calculatoare">Calculatoare</option>
+                        <option value="Automatica">Automatică</option>
+                        <option value="Tehnologia Informatiei">TI</option>
+                        <option value="Electronica Aplicata">Electronică</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">Creează Cont</button>
+    </form>
+    <div class="text-center mt-3 pt-3 border-top">
+        <a href="{{ url_for('auth.login') }}" class="text-decoration-none small">Ai deja cont? Autentificare</a>
+    </div>
+</div>
+
+<script>
+    function toggleFields() {
+        var role = document.getElementById("roleSelect").value;
+        var fields = document.getElementById("studentFields");
+        var matricol = document.getElementById("matricolInput");
+        if(role === 'student') {
+            fields.style.display = 'block';
+            matricol.required = true;
+        } else {
+            fields.style.display = 'none';
+            matricol.required = false;
+        }
+    }
+    toggleFields();
+</script>
+{% endblock %}

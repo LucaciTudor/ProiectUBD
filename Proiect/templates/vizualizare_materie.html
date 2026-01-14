@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+{% block page_title %}{{ disciplina.nume_disciplina }}{% endblock %}
+
+{% block content %}
+<style>
+    /* Stiluri pentru ovalele de prezență */
+    #weeksContainer .btn {
+        border: 2px solid;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
+    #weeksContainer .btn:focus {
+        outline: none !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2) !important;
+    }
+    
+    #weeksContainer .btn:active {
+        transform: scale(0.95) !important;
+    }
+    
+    /* Îmbunătățiri pentru form-uri */
+    .form-control, .form-select {
+        color: #1a1a1a !important;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        color: #1a1a1a !important;
+    }
+    
+    .form-control::placeholder {
+        color: #6c757d !important;
+        opacity: 0.8;
+    }
+</style>
+
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+            <span class="badge bg-light text-dark border me-2">{{ disciplina.specializare }}</span>
+            <span class="text-muted small">An {{ disciplina.an_studiu }} • Sem {{ disciplina.semestru }}</span>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn btn-light btn-sm"><i class="fas fa-arrow-left"></i> Înapoi</a>
+    </div>
+</div>
+
+{% if is_titular %}
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-white" data-bs-toggle="collapse" data-bs-target="#configPanel" style="cursor: pointer;">
+        <div class="d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-primary"><i class="fas fa-sliders-h me-2"></i> Configurare Curs</span>
+            <i class="fas fa-chevron-down text-muted"></i>
+        </div>
+    </div>
+    <div class="collapse" id="configPanel">
+        <div class="card-body">
+            <form method="POST">
+                <input type="hidden" name="config_materie" value="1">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-uppercase small text-muted fw-bold mb-3">Ponderi Note (%) - {{ disciplina.nume_disciplina }}</h6>
+                        <div class="d-flex gap-3">
+                            <div class="flex-grow-1"><label class="form-label small">Examen</label><input type="number" name="pond_exam" value="{{ disciplina.pondere_examen }}" class="form-control" min="0" max="100"></div>
+                            {% if disciplina.has_laborator %}<div class="flex-grow-1"><label class="form-label small">Lab</label><input type="number" name="pond_lab" value="{{ disciplina.pondere_laborator }}" class="form-control" min="0" max="100"></div>{% endif %}
+                            {% if disciplina.has_proiect %}<div class="flex-grow-1"><label class="form-label small">Proiect</label><input type="number" name="pond_pro" value="{{ disciplina.pondere_proiect }}" class="form-control" min="0" max="100"></div>{% endif %}
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Configurarea se aplică doar pentru disciplina <strong>{{ disciplina.nume_disciplina }}</strong>
+                        </small>
+                    </div>
+                    <div class="col-md-6 border-start">
+                        <h6 class="text-uppercase small text-muted fw-bold mb-3">Prezență Minimă (%) - {{ disciplina.nume_disciplina }}</h6>
+                        <div class="d-flex gap-3">
+                            <div class="flex-grow-1"><label class="form-label small">Curs</label><input type="number" name="min_curs" value="{{ disciplina.min_prez_curs }}" class="form-control" min="0" max="100"></div>
+                            {% if disciplina.has_laborator %}<div class="flex-grow-1"><label class="form-label small">Lab</label><input type="number" name="min_lab" value="{{ disciplina.min_prez_laborator }}" class="form-control" min="0" max="100"></div>{% endif %}
+                            {% if disciplina.has_seminar %}<div class="flex-grow-1"><label class="form-label small">Sem</label><input type="number" name="min_sem" value="{{ disciplina.min_prez_seminar }}" class="form-control" min="0" max="100"></div>{% endif %}
+                        </div>
+                        <small class="text-muted mt-2 d-block">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Setările de prezență pentru această disciplină specifică
+                        </small>
+                    </div>
+                </div>
+                <div class="mt-3 text-end">
+                    <button type="submit" class="btn btn-primary btn-sm">Salvează</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="fas fa-list me-2 text-primary"></i> Catalog Studenți</h6>
+        <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#enrollPanel">
+            <i class="fas fa-plus"></i> Adaugă Student
+        </button>
+    </div>
+    
+    <div class="collapse bg-light border-bottom p-3" id="enrollPanel">
+        <form action="{{ url_for('academic.enroll_student') }}" method="POST" class="row g-2 align-items-center">
+            <input type="hidden" name="id_disciplina" value="{{ disciplina.id_disciplina }}">
+            <div class="col-md-8">
+                <input class="form-control" list="studentOptions" name="id_student_search" id="studentSearch" placeholder="Caută orice student..." required onchange="updateHiddenId()">
+                <datalist id="studentOptions">
+                    {% for s in studenti_neinscrisi %}
+                        <option data-value="{{ s.id_student }}" value="{{ s.get_full_name() }} ({{ s.nr_matricol }}) - {{ s.specializare }}"></option>
+                    {% endfor %}
+                </datalist>
+                <input type="hidden" name="id_student" id="realStudentId">
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">Înscrie</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th class="ps-4" style="width: 30%;">Student</th>
+                    <th style="width: 40%;">Notare</th>
+                    <th>Prezență</th>
+                    <th class="text-end pe-4">Acțiuni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in studenti %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold">{{ s.get_full_name() }}</div>
+                        <div class="small text-muted">{{ s.nr_matricol }}</div>
+                        
+                        <div class="mt-1">
+                            {% if note_map.get(s.id_student) %}
+                                {% for tip, val in note_map[s.id_student].items() %}
+                                    <span class="badge bg-light text-dark border me-1">
+                                        {{ tip }}: <strong>{{ val }}</strong>
+                                        <form action="{{ url_for('academic.reset_nota') }}" method="POST" style="display:inline;">
+                                            <input type="hidden" name="id_student" value="{{ s.id_student }}">
+                                            <input type="hidden" name="id_disciplina" value="{{ disciplina.id_disciplina }}">
+                                            <input type="hidden" name="tip_activitate" value="{{ tip }}">
+                                            <button type="submit" class="btn btn-link p-0 ms-1 text-danger" style="font-size: 0.8em; text-decoration:none;">✕</button>
+                                        </form>
+                                    </span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <form action="{{ url_for('academic.adauga_nota_completa') }}" method="POST" class="d-flex gap-2">
+                            <input type="hidden" name="id_student" value="{{ s.id_student }}">
+                            <input type="hidden" name="id_disciplina" value="{{ disciplina.id_disciplina }}">
+                            <select name="tip_activitate" class="form-select form-select-sm" style="width: 110px;" required>
+                                <option value="Examen">Examen</option>
+                                {% if disciplina.has_laborator %}<option value="Laborator">Lab</option>{% endif %}
+                                {% if disciplina.has_proiect %}<option value="Proiect">Proiect</option>{% endif %}
+                            </select>
+                            <input type="number" name="nota" placeholder="Nota" min="1" max="10" step="0.1" class="form-control form-control-sm" style="width: 80px; font-weight: 600; text-align: center;" required>
+                            <button type="submit" class="btn btn-light btn-sm text-success"><i class="fas fa-check"></i></button>
+                        </form>
+                    </td>
+                    <td>
+                        <button class="btn btn-light btn-sm text-primary" onclick="openAttendanceModal('{{ s.id_student }}', '{{ s.get_full_name() }}')">
+                            <i class="far fa-calendar-check me-1"></i> Detalii
+                        </button>
+                    </td>
+                    <td class="text-end pe-4">
+                        <form action="{{ url_for('academic.remove_student') }}" method="POST" style="display:inline;">
+                            <input type="hidden" name="id_disciplina" value="{{ disciplina.id_disciplina }}">
+                            <input type="hidden" name="id_student" value="{{ s.id_student }}">
+                            <button type="submit" class="btn btn-light btn-sm text-danger"><i class="fas fa-trash-alt"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center p-4 text-muted">Niciun student înscris.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="attendanceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Prezențe: <span id="studentNameModal" class="text-primary"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-pills mb-4 justify-content-center" id="attendanceTabs">
+                    <li class="nav-item"><a class="nav-link active rounded-pill" data-bs-toggle="tab" href="#tabCurs" onclick="setActivitate('curs')">Curs</a></li>
+                    {% if disciplina.has_laborator %}<li class="nav-item"><a class="nav-link rounded-pill" data-bs-toggle="tab" href="#tabLab" onclick="setActivitate('laborator')">Lab</a></li>{% endif %}
+                    {% if disciplina.has_seminar %}<li class="nav-item"><a class="nav-link rounded-pill" data-bs-toggle="tab" href="#tabSem" onclick="setActivitate('seminar')">Seminar</a></li>{% endif %}
+                    {% if disciplina.has_proiect %}<li class="nav-item"><a class="nav-link rounded-pill" data-bs-toggle="tab" href="#tabPro" onclick="setActivitate('proiect')">Proiect</a></li>{% endif %}
+                </ul>
+                <div class="d-flex flex-wrap gap-2 justify-content-center" id="weeksContainer"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary rounded-pill px-4" id="btnSaveAtt" onclick="saveAttendance()">Salvează Modificările</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateHiddenId() {
+        var val = document.getElementById("studentSearch").value;
+        var opts = document.getElementById("studentOptions").childNodes;
+        for (var i = 0; i < opts.length; i++) {
+            if (opts[i].value === val) {
+                document.getElementById("realStudentId").value = opts[i].getAttribute("data-value");
+                break;
+            }
+        }
+    }
+
+    let currentStudentId = null, currentActivitate = 'curs';
+    const disciplinId = "{{ disciplina.id_disciplina }}";
+
+    function setActivitate(act) { currentActivitate = act; loadWeeks(); }
+    function openAttendanceModal(sid, sname) {
+        currentStudentId = sid; document.getElementById('studentNameModal').innerText = sname;
+        currentActivitate = 'curs'; 
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        document.querySelector('.nav-link').classList.add('active');
+        new bootstrap.Modal(document.getElementById('attendanceModal')).show();
+        loadWeeks();
+    }
+    function loadWeeks() {
+        const container = document.getElementById('weeksContainer');
+        container.innerHTML = '<div class="spinner-border text-primary"></div>';
+        fetch(`/get_prezente_student?id_student=${currentStudentId}&id_disciplina=${disciplinId}&tip_activitate=${currentActivitate}`)
+            .then(r => r.json())
+            .then(weeks => {
+                container.innerHTML = '';
+                for(let i=1; i<=14; i++) {
+                    const checked = weeks.includes(i) ? 'checked' : '';
+                    const bg = weeks.includes(i) ? 'bg-success text-white border-success' : 'bg-light text-dark border-secondary';
+                    container.innerHTML += `
+                        <label class="btn ${bg} position-relative" style="width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 50%; margin: 2px; transition: all 0.2s ease;">
+                            ${i}
+                            <input type="checkbox" class="position-absolute" style="opacity: 0; width: 100%; height: 100%; cursor: pointer; margin: 0;" value="${i}" ${checked} onchange="toggleWeekStyle(this, ${i});">
+                        </label>
+                    `;
+                }
+            });
+    }
+    
+    function toggleWeekStyle(checkbox, weekNumber) {
+        const label = checkbox.parentElement;
+        if (checkbox.checked) {
+            label.className = 'btn bg-success text-white border-success position-relative';
+            label.style.cssText = 'width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 50%; margin: 2px; transition: all 0.2s ease; transform: scale(1.1);';
+        } else {
+            label.className = 'btn bg-light text-dark border-secondary position-relative';
+            label.style.cssText = 'width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; border-radius: 50%; margin: 2px; transition: all 0.2s ease;';
+        }
+        
+        // Animație scurtă
+        setTimeout(() => {
+            if (checkbox.checked) {
+                label.style.transform = 'scale(1.05)';
+            } else {
+                label.style.transform = 'scale(1)';
+            }
+        }, 100);
+    }
+    function saveAttendance() {
+        const checkboxes = document.querySelectorAll('#weeksContainer input[type="checkbox"]:checked');
+        const selectedWeeks = Array.from(checkboxes).map(cb => cb.value);
+        fetch('/update_prezenta', {
+            method: 'POST', headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ id_student: currentStudentId, id_disciplina: disciplinId, tip_activitate: currentActivitate, weeks: selectedWeeks })
+        }).then(r => r.json()).then(res => { 
+            if(res.status === 'success') {
+                let btn = document.getElementById('btnSaveAtt');
+                btn.innerText = "Salvat!";
+                btn.classList.replace('btn-primary', 'btn-success');
+                setTimeout(() => {
+                    btn.innerText = "Salvează Modificările";
+                    btn.classList.replace('btn-success', 'btn-primary');
+                }, 1500);
+            }
+        });
+    }
+</script>
+{% endblock %}
